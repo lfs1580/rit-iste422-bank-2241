@@ -166,9 +166,13 @@ public class CheckingAccountTestFixture {
         // ...or populate with scenarios from a CSV file...
         // now load these same scenarios from a file plus one more
         System.out.println("\n\n****** FROM FILE ******\n");
-        // We could get the filename from the cmdline, e.g. "-f CheckingAccountScenarios.csv"
-        List<String> scenarioStringsFromFile = Files
-                .readAllLines(Paths.get(TEST_FILE.replace('/', File.separatorChar)));
+       	// We could get the filename from the cmdline, e.g. "-f CheckingAccountScenarios.csv"
+	String fileName = TEST_FILE;
+	if(args.length != 0){
+	  fileName = args[0];
+	} 
+	List<String> scenarioStringsFromFile = Files
+                .readAllLines(Paths.get(fileName.replace('/', File.separatorChar)));
         testScenarios = parseScenarioStrings(scenarioStringsFromFile);
         runJunitTests();
 

@@ -64,21 +64,29 @@ public class SavingsAccountTestFixture {
             logger.info("**** Running test for {}", scenario);
 
             // set up account with specified starting balance and interest rate
-            // TODO: Add code to create account....
+	    SavingsAccount sa = new SavingsAccount("test " +testNum, -1, scenario.initBalance, 0, -1);
+	    
 
             // now process withdrawals, deposits
-            // TODO: Add code to process withdrawals....
-
-            // TODO: Add code to process deposits
-
+            for(double withdrawalAmount : scenario.withdrawals){
+	    	sa.withdraw(withdrawalAmount);
+	    }    
+	    for(double depositAmount : scenario.deposits){
+	    	sa.deposit(depositAmount);
+	    }
+	
             // run month-end if desired and output register
             if (scenario.runMonthEndNTimes > 0) {
-                // TODO: Add code to run month-end....
+	        for(int i = 0; i < scenario.runMonthEndNTimes; i++){
+		   sa.monthEnd();
+		   for(RegisterEntry entry : sa.getRegisterEntries()){
+		      logger.info("Register Entry {} -- {} : {}", entry.id(), entry.entryName(), entry.amount());
+		  }
+		}	
             }
 
             // make sure the balance is correct
-            // TODO: add code to verify balance
-
+            assertThat("Test #" + testNum + ":" + scenario, sa.getBalance(), is(scenario.endBalance));
         }
     }
 
@@ -112,12 +120,18 @@ public class SavingsAccountTestFixture {
     private static TestScenario parseScenarioString(String scenarioAsString) {
         String [] scenarioValues = scenarioAsString.split(",");
         // should probably validate length here
-        double initialBalance = Double.parseDouble(scenarioValues[0]);
-        // TODO: parse the rest of your fields
-        List<Double> wds = parseListOfAmounts(scenarioValues[2]);
-        // TODO: Replace these dummy values with _your_ field values to populate TestScenario object
+       	double initialBalance = Double.parseDouble(scenarioValues[0]);
+	double interestRate = Double.parseDouble(scenarioValues[1]);
+	List<Double> withdrawals = parseListOfAmounts(scenarioValues[2]);
+	List<Double> deposits = parseListOfAmounts(scenarioValues[3]);
+	int runMonthEndNTimes = 0;
+	if(scenarioValues[4] != null && !(scenarioValues[4].trim().isEmpty())){
+	   runMonthEndNTimes = Integer.parseInt(scenarioValues[4].trim());
+	}
+	double endBalance = Double.parseDouble(scenarioValues[5]);
+
         TestScenario scenario = new TestScenario(
-                initialBalance, 0.0, null, null, 0, 0.0
+                initialBalance, interestRate, withdrawals, deposits, runMonthEndNTimes, endBalance
         );
         return scenario;
     }
@@ -138,17 +152,31 @@ public class SavingsAccountTestFixture {
     public static void main(String [] args) throws IOException {
         System.out.println("START TESTING");
 
-        // TODO: Instead of hardcoded "false", determine if tests are coming from file or cmdline
-        // Note: testsFromFile is just a suggestion, you don't have to use testsFromFile or even an if/then statement!
-        boolean testsFromFile = false;
+        // Instead of hardcoded "false", determine if tests are coming from file or cmdline
+       	// Note: testsFromFile is just a suggestion, you don't have to use testsFromFile or even an if/then statement!
+	boolean testsFromFile = false;
+	String cmdString = "";
+	String fileName = "";
+	if(args.length == 0){
+	    testsFromFile = true;
+	    fileName = TEST_FILE;
+	}else{
+	    File file = new File(args[0]);
+	    if(file.exists() && file.isFile()){
+	       testsFromFile = true;
+	       fileName = args[0];
+
+	    }else{
+	      cmdString = args[0];
+	    }
+	}
+   
 
         // Note: this is just a suggestion, you don't have to use testsFromFile or even an if/then statement!
         if (testsFromFile) {
             // if populating with scenarios from a CSV file...
-            // TODO: We could get the filename from the cmdline, e.g. "-f CheckingAccountScenarios.csv"
-            System.out.println("\n\n****** FROM FILE ******\n");
-            // TODO: get filename from cmdline and use instead of TEST_FILE constant
-            List<String> scenarioStringsFromFile = Files.readAllLines(Paths.get(TEST_FILE));
+	    System.out.println("\n\n****** FROM FILE ******\n");
+            List<String> scenarioStringsFromFile = Files.readAllLines(Paths.get(fileName));
             // Note: toArray converts from a List to an array
             testScenarios = parseScenarioStrings(scenarioStringsFromFile);
             runJunitTests();
@@ -158,8 +186,25 @@ public class SavingsAccountTestFixture {
             // for example "-t '10, 20|20, , 40|10, 0'"
             // Note the single-quotes above ^^^ because of the embedded spaces and the pipe symbol
             System.out.println("Command-line arguments passed in: " + java.util.Arrays.asList(args));
-            // TODO: write the code to "parse" scenario into a suitable string
-            // TODO: get TestScenario object from above string and store to testScenarios static var
+            String[] scenarioValues = cmdString.split(",");
+            double initialBalance = Double.parseDouble(scenarioValues[0]);
+	    double interestRate = Double.parseDouble(scenarioValues[1]);
+	    List<Double> withdrawals = parseListOfAmounts(scenarioValues[2]);
+	    List<Double> deposits = parseListOfAmounts(scenarioValues[3]);
+	    int runMonthEndNTimes = 0;
+            if(scenarioValues[4] != null && !(scenarioValues[4].trim().isEmpty())){
+	        runMonthEndNTimes = Integer.parseInt(scenarioValues[4].trim());
+	    }
+	    double endBalance = Double.parseDouble(scenarioValues[5]);
+
+	    System.out.println("Initial Balance: " + initialBalance);
+	    System.out.println("Interest Rate: " + interestRate);
+	    System.out.println("Withdrawals: " + withdrawals);
+	    System.out.println("Deposits: " + deposits);
+	    System.out.println("End Balance: " + endBalance);
+
+	    TestScenario scenario = new TestScenario(
+	       initialBalance, interestRate, withdrawals, deposits, runMonthEndNTimes, endBalance );
             runJunitTests();
         }
         System.out.println("DONE");
